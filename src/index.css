@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    color: #0f172a;
+    background: #ffffff;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+}
+
+@layer utilities {
+  /* ── Gradient text ── */
+  .text-gradient {
+    background: linear-gradient(135deg, #8E4BEB, #4755E9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Dot grid background ── */
+  .dot-grid {
+    background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* ── Glow effects ── */
+  .glow-purple {
+    box-shadow: 0 0 40px 0 rgba(142,75,235,0.35), 0 0 80px 0 rgba(142,75,235,0.15);
+  }
+  .glow-blue {
+    box-shadow: 0 0 40px 0 rgba(71,85,233,0.3);
+  }
+  .btn-glow {
+    box-shadow: 0 4px 24px rgba(142,75,235,0.45), 0 2px 8px rgba(71,85,233,0.3);
+  }
+  .btn-glow:hover {
+    box-shadow: 0 6px 32px rgba(142,75,235,0.6), 0 2px 12px rgba(71,85,233,0.4);
+  }
+
+  /* ── Card hover border glow ── */
+  .card-hover {
+    transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  }
+  .card-hover:hover {
+    border-color: rgba(71,85,233,0.4) !important;
+    box-shadow: 0 0 0 1px rgba(71,85,233,0.15), 0 20px 60px -12px rgba(71,85,233,0.15), 0 8px 30px -8px rgba(142,75,235,0.1);
+    transform: translateY(-3px);
+  }
+
+  /* ── Marquee ── */
+  @keyframes marquee-ltr {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee-ltr 30s linear infinite;
+  }
+  .marquee-track:hover { animation-play-state: paused; }
+  .marquee-wrap { overflow: hidden; }
+
+  /* ── Orb ── */
+  .orb {
+    position: absolute;
+    border-radius: 9999px;
+    pointer-events: none;
+  }
+
+  /* ── Footer underline-input ── */
+  .footer-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid rgba(255,255,255,0.3);
+    padding: 12px 0;
+    color: white;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .footer-input::placeholder { color: rgba(255,255,255,0.45); }
+  .footer-input:focus { border-bottom-color: white; }
+  .footer-input option { color: #0f172a; background: white; }
+
+  /* ── Glassmorphism ── */
+  .glass {
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  /* ── Scrollbar hide utility ── */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
