@@ -17,13 +17,47 @@ export default function FooterSection() {
   const [form, setForm] = useState({ name: '', email: '', type: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   const onChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }))
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault()
     setSubmitting(true)
-    setTimeout(() => { setSubmitted(true); setSubmitting(false) }, 1100)
+    setErrorMessage('')
+
+    try {
+      const response = await fetch('https://formsubmit.co/ajax/hello@inpixellabs.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          project_type: form.type,
+          message: form.message,
+          _subject: `New Inpixel Labs Inquiry: ${form.name} (${form.type})`,
+          _template: 'table',
+        }),
+      })
+
+      const data = await response.json()
+      if (response.ok || data.success === 'true' || data.success === true) {
+        setSubmitted(true)
+      } else {
+        throw new Error(data.message || 'Submission failed')
+      }
+    } catch (err) {
+      console.error('Contact form submission error:', err)
+      // Provide graceful fallback
+      setErrorMessage(
+        'Unable to send automatically right now. Please click below to send via your email client.'
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -143,29 +177,54 @@ export default function FooterSection() {
                   />
                 </div>
 
-                <motion.button
-                  type="submit"
-                  disabled={submitting}
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="self-start flex items-center gap-2 px-8 py-3.5 rounded-full font-bold text-sm transition-all disabled:opacity-70"
-                  style={{
-                    background: 'white',
-                    color: '#8E4BEB',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
-                  }}
-                >
-                  {submitting ? (
-                    <>
-                      <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                      </svg>
-                      Sending…
-                    </>
-                  ) : (
-                    <>Send Message <ArrowUpRight size={14} /></>
-                  )}
-                </motion.button>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <motion.button
+                    type="submit"
+                    disabled={submitting}
+                    whileHover={{ scale: 1.02, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="self-start flex items-center gap-2 px-8 py-3.5 rounded-full font-bold text-sm transition-all disabled:opacity-70 cursor-pointer"
+                    style={{
+                      background: 'white',
+                      color: '#8E4BEB',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                    }}
+                  >
+                    {submitting ? (
+                      <>
+                        <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                        </svg>
+                        Sending…
+                      </>
+                    ) : (
+                      <>Send Message <ArrowUpRight size={14} /></>
+                    )}
+                  </motion.button>
+
+                  <a
+                    href={`mailto:hello@inpixellabs.com?subject=${encodeURIComponent(
+                      form.type ? `Inquiry: ${form.type}` : 'Project Inquiry'
+                    )}&body=${encodeURIComponent(
+                      `Name: ${form.name}\nEmail: ${form.email}\nProject: ${form.type}\n\nMessage:\n${form.message}`
+                    )}`}
+                    className="text-xs text-white/70 hover:text-white underline underline-offset-4 transition-colors"
+                  >
+                    or send via your email client →
+                  </a>
+                </div>
+
+                {errorMessage && (
+                  <div className="p-3.5 rounded-xl bg-red-500/20 border border-red-300/30 text-white text-xs leading-relaxed">
+                    {errorMessage}{' '}
+                    <a
+                      href={`mailto:hello@inpixellabs.com?subject=Inquiry&body=${encodeURIComponent(form.message)}`}
+                      className="underline font-semibold text-white ml-1"
+                    >
+                      Click here to email directly
+                    </a>
+                  </div>
+                )}
               </form>
             )}
           </motion.div>
