@@ -4,6 +4,7 @@ import ServicesSection from './components/ServicesSection'
 import TechStackSection from './components/TechStackSection'
 import WhyUsSection from './components/WhyUsSection'
 import FooterSection from './components/FooterSection'
+import WhatsAppButton from './components/WhatsAppButton'
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         <WhyUsSection />
       </main>
       <FooterSection />
+      <WhatsAppButton />
     </div>
   )
 }
