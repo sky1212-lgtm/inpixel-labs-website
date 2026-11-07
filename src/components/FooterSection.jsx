@@ -53,9 +53,9 @@ Sent via Inpixel Labs Web Portal`
     e.preventDefault()
     setSubmitting(true)
 
-    // 1. Attempt SMTP API endpoint (/api/contact or Netlify function)
+    // 1. Attempt SMTP API endpoints (local Node server, Hostinger PHP, or Netlify function)
     try {
-      const endpoints = ['/api/contact', '/.netlify/functions/contact']
+      const endpoints = ['/contact.php', '/api/contact.php', '/api/contact', '/.netlify/functions/contact']
       for (const endpoint of endpoints) {
         try {
           const res = await fetch(endpoint, {
@@ -73,7 +73,7 @@ Sent via Inpixel Labs Web Portal`
             }
           }
         } catch {
-          // try next
+          // try next endpoint
         }
       }
     } catch (err) {
