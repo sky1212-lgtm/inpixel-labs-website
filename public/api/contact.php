@@ -89,14 +89,22 @@ function send_smtp_mail($to, $subject, $body_text, $from_name, $client_email) {
         return false;
     }
 
-    // Headers & Body
-    $headers = "From: " . $from_name . " <" . $username . ">\r\n";
+    // RFC-compliant Anti-Spam Headers
+    $msg_id = '<' . bin2hex(random_bytes(16)) . '@inpixellabs.com>';
+    $date = date('r');
+
+    $headers = "Date: " . $date . "\r\n";
+    $headers .= "Message-ID: " . $msg_id . "\r\n";
+    $headers .= "From: " . $from_name . " <" . $username . ">\r\n";
     $headers .= "To: <" . $to . ">\r\n";
-    $headers .= "Reply-To: " . $client_email . "\r\n";
+    $headers .= "Reply-To: \"" . addslashes($name) . "\" <" . $client_email . ">\r\n";
     $headers .= "Subject: " . $subject . "\r\n";
     $headers .= "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    $headers .= "X-Mailer: InpixelLabs/1.0\r\n";
+    $headers .= "Content-Transfer-Encoding: 8bit\r\n";
+    $headers .= "X-Priority: 3 (Normal)\r\n";
+    $headers .= "Auto-Submitted: auto-generated\r\n";
+    $headers .= "X-Mailer: InpixelLabs Portal/1.0\r\n";
     $headers .= "\r\n";
 
     fputs($socket, $headers . $body_text . "\r\n.\r\n");
@@ -109,24 +117,21 @@ function send_smtp_mail($to, $subject, $body_text, $from_name, $client_email) {
 }
 
 $to = 'hello@inpixellabs.com';
-$subject = "New Inquiry: " . $name . " (" . $type . ")";
+$subject = "Inquiry from " . $name . " - " . $type;
 
-$body = "You have received a new project inquiry from the Inpixel Labs website:\n\n";
+$body = "New project inquiry details:\n\n";
 $body .= "Client Name: " . $name . "\n";
 $body .= "Client Email: " . $email . "\n";
 $body .= "Project Type: " . $type . "\n\n";
-$body .= "Message:\n" . $message . "\n\n";
+$body .= "Project Overview:\n" . $message . "\n\n";
 $body .= "---\nInpixel Labs • Jamnagar, Gujarat, India\nhttps://inpixellabs.com\n";
 
-$sent = send_smtp_mail($to, $subject, $body, "Inpixel Labs Website", $email);
+$sent = send_smtp_mail($to, $subject, $body, "Inpixel Labs Inquiries", $email);
 
 if ($sent) {
     http_response_code(200);
     echo json_encode(['success' => true, 'message' => 'Email sent successfully via Hostinger SMTP!']);
 } else {
-    // Fallback to native mail()
-    $headers = "From: Inpixel Labs <hello@inpixellabs.com>\r\nReply-To: $email\r\nContent-Type: text/plain; charset=UTF-8";
-    @mail($to, $subject, $body, $headers);
-    http_response_code(200);
-    echo json_encode(['success' => true, 'message' => 'Processed inquiry.']);
+    http_response_code(500);
+    echo json_encode(['error' => 'Failed to deliver inquiry through mail server.']);
 }
