@@ -22,6 +22,7 @@ export default function FooterSection() {
   const [form, setForm] = useState({ name: '', email: '', type: 'Custom Web Development', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [viaSmtp, setViaSmtp] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const onChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }))
@@ -52,31 +53,38 @@ Sent via Inpixel Labs Web Portal`
     e.preventDefault()
     setSubmitting(true)
 
-    // If Formspree is configured, send via API
-    if (FORMSPREE_ENDPOINT) {
-      try {
-        const res = await fetch(FORMSPREE_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify(form),
-        })
-        if (res.ok) {
-          setSubmitted(true)
-          setSubmitting(false)
-          return
+    // 1. Attempt SMTP API endpoint (/api/contact or Netlify function)
+    try {
+      const endpoints = ['/api/contact', '/.netlify/functions/contact']
+      for (const endpoint of endpoints) {
+        try {
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(form),
+          })
+          if (res.ok) {
+            const data = await res.json()
+            if (data.success) {
+              setViaSmtp(true)
+              setSubmitted(true)
+              setSubmitting(false)
+              return
+            }
+          }
+        } catch {
+          // try next
         }
-      } catch (err) {
-        console.warn('Formspree error, falling back to direct dispatch:', err)
       }
+    } catch (err) {
+      console.warn('API error:', err)
     }
 
-    // Default bulletproof action: open mail client + display success card
-    setTimeout(() => {
-      // Trigger mailto link
-      window.location.href = mailtoUrl
-      setSubmitted(true)
-      setSubmitting(false)
-    }, 400)
+    // 2. Fallback: launch mailto & show confirmation card
+    window.location.href = mailtoUrl
+    setViaSmtp(false)
+    setSubmitted(true)
+    setSubmitting(false)
   }
 
   return (
@@ -147,39 +155,53 @@ Sent via Inpixel Labs Web Portal`
                       <CheckCircle2 size={24} className="text-white" />
                     </div>
                     <div>
-                      <h4 className="text-xl font-black">Inquiry Ready!</h4>
-                      <p className="text-white/70 text-xs mt-0.5">Your email client has been prepared with your message.</p>
+                      <h4 className="text-xl font-black">
+                        {viaSmtp ? 'Message Delivered!' : 'Inquiry Ready!'}
+                      </h4>
+                      <p className="text-white/70 text-xs mt-0.5">
+                        {viaSmtp
+                          ? 'Sent securely via our Hostinger mail server to hello@inpixellabs.com.'
+                          : 'Your email client has been prepared with your message.'}
+                      </p>
                     </div>
                   </div>
 
-                  <p className="text-white/80 text-sm leading-relaxed">
-                    If your email client didn't open automatically, choose an option below to deliver your inquiry directly to <strong className="text-white underline">hello@inpixellabs.com</strong>:
-                  </p>
+                  {viaSmtp ? (
+                    <p className="text-white/85 text-sm leading-relaxed">
+                      Thank you for contacting Inpixel Labs. We have received your inquiry and will review it and reply within 24 hours.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-white/80 text-sm leading-relaxed">
+                        If your email client didn't open automatically, choose an option below to deliver your inquiry directly to <strong className="text-white underline">hello@inpixellabs.com</strong>:
+                      </p>
 
-                  <div className="flex flex-wrap gap-3">
-                    <a
-                      href={gmailWebUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-[#8E4BEB] font-bold text-xs hover:bg-white/90 transition-all shadow-lg"
-                    >
-                      <ExternalLink size={13} /> Open in Gmail Web
-                    </a>
+                      <div className="flex flex-wrap gap-3">
+                        <a
+                          href={gmailWebUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-[#8E4BEB] font-bold text-xs hover:bg-white/90 transition-all shadow-lg"
+                        >
+                          <ExternalLink size={13} /> Open in Gmail Web
+                        </a>
 
-                    <a
-                      href={mailtoUrl}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/20 hover:bg-white/30 text-white font-semibold text-xs border border-white/30 transition-all"
-                    >
-                      <Mail size={13} /> Open Default Mail App
-                    </a>
+                        <a
+                          href={mailtoUrl}
+                          className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/20 hover:bg-white/30 text-white font-semibold text-xs border border-white/30 transition-all"
+                        >
+                          <Mail size={13} /> Open Default Mail App
+                        </a>
 
-                    <button
-                      onClick={handleCopy}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer"
-                    >
-                      <Copy size={13} /> {copied ? 'Copied to Clipboard!' : 'Copy Message Text'}
-                    </button>
-                  </div>
+                        <button
+                          onClick={handleCopy}
+                          className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 transition-all cursor-pointer"
+                        >
+                          <Copy size={13} /> {copied ? 'Copied to Clipboard!' : 'Copy Message Text'}
+                        </button>
+                      </div>
+                    </>
+                  )}
 
                   <div className="pt-2 border-t border-white/10">
                     <button
