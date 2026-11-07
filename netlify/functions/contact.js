@@ -28,42 +28,58 @@ export async function handler(event) {
       },
     })
 
-    const subject = `[Inpixel Labs Inquiry] ${type || 'General'} - from ${name}`
+    const subject = `New Inquiry: ${name} (${type || 'General'})`
+    const plainText = `You have received a new project inquiry from the Inpixel Labs website:
+
+Client Name: ${name}
+Client Email: ${email}
+Project Type: ${type || 'General'}
+
+Client Message:
+${message}
+
+---
+Inpixel Labs
+Jamnagar, Gujarat, India
+https://inpixellabs.com`
 
     const htmlContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; rounded: 12px;">
-        <h2 style="color: #8E4BEB; margin-top: 0;">New Project Inquiry</h2>
-        <p style="color: #64748b; font-size: 14px;">Received from Inpixel Labs Website</p>
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h2 style="color: #8E4BEB; margin-top: 0; font-size: 20px;">New Project Inquiry</h2>
+        <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">Submitted from Inpixel Labs Website</p>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
           <tr>
-            <td style="padding: 8px 0; color: #64748b; width: 130px; font-weight: bold;">Client Name:</td>
-            <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${name}</td>
+            <td style="padding: 10px 0; color: #64748b; width: 130px; font-weight: bold; border-bottom: 1px solid #f1f5f9;">Client Name:</td>
+            <td style="padding: 10px 0; color: #0f172a; font-weight: 600; border-bottom: 1px solid #f1f5f9;">${name}</td>
           </tr>
           <tr>
-            <td style="padding: 8px 0; color: #64748b; font-weight: bold;">Client Email:</td>
-            <td style="padding: 8px 0; color: #4755E9;"><a href="mailto:${email}" style="color: #4755E9;">${email}</a></td>
+            <td style="padding: 10px 0; color: #64748b; font-weight: bold; border-bottom: 1px solid #f1f5f9;">Client Email:</td>
+            <td style="padding: 10px 0; color: #4755E9; border-bottom: 1px solid #f1f5f9;"><a href="mailto:${email}" style="color: #4755E9; text-decoration: none;">${email}</a></td>
           </tr>
           <tr>
-            <td style="padding: 8px 0; color: #64748b; font-weight: bold;">Project Type:</td>
-            <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${type || 'Not specified'}</td>
+            <td style="padding: 10px 0; color: #64748b; font-weight: bold; border-bottom: 1px solid #f1f5f9;">Project Type:</td>
+            <td style="padding: 10px 0; color: #0f172a; font-weight: 600; border-bottom: 1px solid #f1f5f9;">${type || 'Not specified'}</td>
           </tr>
         </table>
-        <div style="margin-top: 20px; padding: 16px; background-color: #f8fafc; border-left: 4px solid #8E4BEB; border-radius: 4px;">
-          <p style="margin: 0; color: #334155; line-height: 1.6; white-space: pre-wrap;">${message}</p>
+        <div style="padding: 18px; background-color: #f8fafc; border-left: 4px solid #8E4BEB; border-radius: 6px; margin-bottom: 24px;">
+          <p style="margin: 0; color: #334155; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${message}</p>
         </div>
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0 16px;" />
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
         <p style="color: #94a3b8; font-size: 12px; margin: 0;">Inpixel Labs &bull; Jamnagar, Gujarat, India</p>
       </div>
     `
 
     await transporter.sendMail({
-      from: `"Inpixel Labs Inquiries" <${process.env.SMTP_USER || 'hello@inpixellabs.com'}>`,
+      from: `"Inpixel Labs" <${process.env.SMTP_USER || 'hello@inpixellabs.com'}>`,
       to: process.env.CONTACT_EMAIL || 'hello@inpixellabs.com',
-      replyTo: email,
+      replyTo: `"${name}" <${email}>`,
       subject: subject,
-      text: `Name: ${name}\nEmail: ${email}\nProject Type: ${type}\n\nMessage:\n${message}`,
+      text: plainText,
       html: htmlContent,
+      headers: {
+        'Auto-Submitted': 'auto-generated',
+        'X-Auto-Response-Suppress': 'All',
+      },
     })
 
     return {
